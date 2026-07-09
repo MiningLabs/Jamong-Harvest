@@ -1,6 +1,6 @@
 # <PROJECT_NAME> Claude Code Operating Guide
 
-> Jamong 전용 Claude Code 프로젝트 운영 템플릿입니다. 이 파일을 대상 프로젝트 루트의 `CLAUDE.md`로 복사한 뒤 `<PROJECT_NAME>`과 `<PROJECT_ROOT>`를 실제 값으로 바꿔 사용합니다.
+> Jamong 전용 Claude Code 프로젝트 운영 템플릿입니다. 이 파일을 대상 프로젝트 루트의 `CLAUDE.md`로 복사한 뒤 `<PROJECT_NAME>`, `<PROJECT_ROOT>`, `<WIKI_ID>`를 실제 값으로 바꿔 사용합니다.
 
 ## 0. 우선순위
 
@@ -27,6 +27,7 @@
 
 - Jamong의 프로젝트는 기본적으로 `/home/dev/project/<project>` 아래에 둡니다.
 - 현재 프로젝트 루트는 `<PROJECT_ROOT>` 입니다.
+- 이 프로젝트가 참조하는 Wiki는 `<WIKI_ID>` 입니다 (미사용 시 생략 가능).
 - 명령 실행 전 현재 위치와 대상 파일을 확인합니다.
 - 다른 프로젝트나 홈 디렉터리의 전역 설정을 변경해야 하는 경우, 사용자가 명시적으로 요청했는지 확인합니다.
 

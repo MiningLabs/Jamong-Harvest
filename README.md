@@ -16,8 +16,15 @@ Jamong-Harvest/
 │   ├── completion-report/
 │   ├── code-discipline/
 │   ├── versioning/
-│   └── deploy/
-├── mcp/                    # MCP 서버 (스킬을 원격으로 서빙)
+│   ├── deploy/
+│   └── wiki-client/
+├── wiki/                   # Wiki 서버 (무인증 stateless REST, 다중 wiki_id 지원)
+│   ├── server.py
+│   ├── storage.py
+│   ├── requirements.txt
+│   ├── install.sh
+│   └── jamong-wiki.service
+├── mcp/                    # (레거시) MCP 서버 — Wiki 서버로 대체, 마이그레이션 후 제거 예정
 │   ├── server.py
 │   ├── requirements.txt
 │   ├── install.sh
@@ -36,7 +43,23 @@ Jamong-Harvest/
 
 ## 스킬 설치
 
-[GitHub Releases](https://github.com/HelloJamong/Jamong-Harvest/releases/latest)에서 `install.zip`을 받거나, 저장소를 직접 클론해서 실행합니다.
+아래 세 가지 방법 중 하나로 받습니다.
+
+```bash
+# 1) git clone (권장 — skills/까지 항상 함께 받음)
+git clone https://github.com/HelloJamong/Jamong-Harvest.git
+
+# 2) curl로 install.zip 받기 (skills/ 포함, 압축 해제 필요)
+curl -fsSLO https://github.com/HelloJamong/Jamong-Harvest/releases/latest/download/install.zip
+unzip install.zip
+
+# 3) curl로 install.sh만 받기 (skills/ 없이 스크립트만 필요할 때)
+curl -fsSLO https://github.com/HelloJamong/Jamong-Harvest/releases/latest/download/install.sh
+```
+
+> 3번은 `install.sh` 파일만 받습니다. `skills/` 디렉터리가 옆에 없으면 설치할 스킬이 없으므로, 스크립트 내용을 확인하거나 다른 위치의 `skills/`와 함께 쓸 때만 사용하세요. 실제 설치는 1번 또는 2번으로 `skills/`까지 받은 뒤 실행하는 걸 권장합니다.
+
+[GitHub Releases](https://github.com/HelloJamong/Jamong-Harvest/releases/latest) 페이지에서도 동일한 파일을 받을 수 있습니다.
 
 ```bash
 # Claude Code + Codex 모두 설치
@@ -73,89 +96,65 @@ install.bat all
 | `code-discipline` | 코드 작성 전 원칙 확인 시 |
 | `versioning` | 버전 올리기, CHANGELOG 작성, tag/릴리즈 시 |
 | `deploy` | Docker 이미지 빌드·배포, digest 기반 자동 업데이트 시 |
+| `wiki-client` | Wiki 서버에서 지식을 조회·기록할 때 |
 
-## MCP 서버
+## Wiki 서버
 
-스킬을 파일로 설치하는 대신, MCP 서버에 연결해서 사용할 수 있어요. 여러 머신에서 동일한 스킬을 쓸 때 유용합니다.
+여러 머신·여러 프로젝트에서 지식(행동 강령, 업무별 데이터)을 공유하고 싶을 때, MCP 연결 대신 **무인증 stateless REST API**로 조회·기록합니다. 매 요청이 독립적이라 세션이 끊길 일이 없고, `wiki_id` 경로 세그먼트만 바꾸면 여러 wiki(예: 행동강령용 `jamong-harvest`, 업무별 wiki)를 자유롭게 오갈 수 있습니다. (MCP OAuth 세션 기반 연결이 겪던 재연결·재인증 문제를 구조적으로 없애기 위한 대체입니다 — 자세한 배경은 [SPEC.md](SPEC.md#1-목표-objective) 참고.)
 
 ### 서버 설치 (Rocky Linux / RHEL 계열)
 
 ```bash
 git clone https://github.com/HelloJamong/Jamong-Harvest.git /opt/jamong-harvest
 cd /opt/jamong-harvest
-bash mcp/install.sh
+bash wiki/install.sh
 
 # install.sh 안내에 따라 systemd 서비스 등록
-sudo cp /tmp/jamong-mcp.service /etc/systemd/system/jamong-mcp.service
+sudo cp /tmp/jamong-wiki.service /etc/systemd/system/jamong-wiki.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now jamong-wiki
 ```
 
-### MCP_HOST 설정 (필수)
+### 환경변수 설정 (필수)
 
-서비스 파일에 외부 도메인을 직접 지정해야 합니다. git에는 플레이스홀더(`your-domain.com`)로 커밋되어 있으므로, **서버에 복사한 뒤 반드시 실제 도메인으로 수정**하세요.
+`wiki/jamong-wiki.env`에서 실제 값으로 수정합니다. **인증이 없는 서버이므로 `HOST=0.0.0.0`은 절대 설정하지 마세요** — 서버가 기동 자체를 거부합니다.
 
 ```bash
-sudo vi /etc/systemd/system/jamong-mcp.service
+sudo vi /opt/jamong-harvest/wiki/jamong-wiki.env
 ```
 
 ```ini
-# 아래 줄을 실제 도메인으로 변경
-Environment=MCP_HOST=your-domain.com  →  Environment=MCP_HOST=mcp.example.com
+PORT=8001
+HOST=127.0.0.1   # 내부망 인터페이스 IP로 변경 (0.0.0.0 금지)
 ```
+
+### Claude Code / Codex 연결
+
+MCP처럼 별도 등록 절차가 없습니다. 접속하려는 각 클라이언트 머신에서 아래 두 가지만 하면 됩니다. (서버까지의 네트워크 경로 — VPN, SSH 터널 등 — 는 환경마다 다르므로 별도로 구성되어 있다고 가정합니다. 서버는 무인증이므로 신뢰된 경로로만 접근하세요.)
+
+1. `./install.sh all`로 `wiki-client` 스킬을 설치합니다 (스킬 목록에 포함되어 자동 설치됨).
+2. `WIKI_BASE_URL`을 셸 프로필에 영구 설정합니다 (터미널을 새로 열 때마다 다시 지정하지 않도록).
 
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now jamong-mcp
+echo 'export WIKI_BASE_URL=http://내부IP:8001' >> ~/.bashrc   # zsh면 ~/.zshrc
+source ~/.bashrc
 ```
 
-### Claude Code 연결
+이후 Claude Code/Codex는 `wiki-client` 스킬의 지시에 따라 `curl`로 직접 조회·기록합니다. 사용 예시와 엔드포인트 레퍼런스는 [skills/wiki-client/SKILL.md](skills/wiki-client/SKILL.md) 참고.
 
-CLI로 추가하거나 설정 파일에 직접 입력합니다.
+### 지식 갱신
 
-**CLI (권장)**
+무상태 서버라 별도 재시작·재인증이 필요 없습니다. 페이지를 바로 `POST`/`PUT`하면 즉시 반영됩니다.
 
 ```bash
-claude mcp add jamong-skills --transport http https://your-domain.com/mcp
+curl -s -X POST "$WIKI_BASE_URL/wikis/jamong-harvest/pages" \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"제목","content":"본문","tags":["tag"],"category":"pattern"}'
 ```
 
-**또는 `~/.claude/settings.json` 직접 수정**
+### (레거시) MCP 서버
 
-```json
-{
-  "mcpServers": {
-    "jamong-skills": {
-      "type": "http",
-      "url": "https://your-domain.com/mcp"
-    }
-  }
-}
-```
-
-연결 확인:
-
-```bash
-claude mcp list
-# jamong-skills: https://your-domain.com/mcp 가 표시되면 정상
-```
-
-### Codex 연결
-
-`~/.codex/config.yaml` 에 MCP 서버를 등록합니다.
-
-```yaml
-mcp_servers:
-  - name: jamong-skills
-    url: https://your-domain.com/mcp
-    transport: http
-```
-
-파일이 없으면 신규 생성합니다. Codex 재시작 후 적용됩니다.
-
-### 스킬 업데이트
-
-```bash
-cd /opt/jamong-harvest && git pull
-sudo systemctl restart jamong-mcp
-```
+`mcp/`는 OAuth 2.0 기반 구서버로, 트래픽이 Wiki 서버로 이전될 때까지만 유지됩니다. 신규 사용은 권장하지 않습니다. 기존 설치 절차는 `mcp/install.sh` 및 저장소 히스토리를 참고하세요.
 
 ## 인코딩 기준
 

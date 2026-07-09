@@ -17,6 +17,8 @@
 | `templates/AGENTS.md` | Codex/OMX 및 범용 에이전트 운영 규칙 템플릿 |
 | `hooks/claude/block-sudo-bash.mjs` | Claude Code Bash PreToolUse 관리자 명령 차단 hook |
 | `hooks/codex/block-sudo-bash.mjs` | Codex/OMX Bash PreToolUse 관리자 명령 차단 hook |
+| `wiki/` | Wiki 서버 (무인증 stateless REST, 다중 wiki_id 지원) — MCP(`mcp/`) 대체 |
+| `skills/wiki-client/` | Wiki 서버 curl 호출 규칙 스킬 |
 
 ---
 
@@ -70,6 +72,7 @@ install.bat claude git-workflow
 | `completion-report` | 작업 완료 보고 시 |
 | `code-discipline` | 코드 작성 전 원칙 확인 시 |
 | `versioning` | 버전 올리기, CHANGELOG 작성, tag/릴리즈 시 |
+| `wiki-client` | Wiki 서버에서 지식을 조회·기록할 때 |
 
 ---
 
@@ -87,6 +90,7 @@ cp /home/dev/project/Jamong-Harvest/templates/AGENTS.md "$PROJECT/AGENTS.md"
 
 - `<PROJECT_NAME>` → 실제 프로젝트 이름
 - `<PROJECT_ROOT>` → 실제 프로젝트 경로
+- `<WIKI_ID>` → 이 프로젝트가 참조할 Wiki 네임스페이스 (Wiki를 안 쓰면 해당 줄을 생략)
 
 권장 확인:
 
@@ -265,14 +269,68 @@ printf '%s\n' '{"tool_name":"Bash","tool_input":{"command":"sudo apt update"}}' 
 
 ---
 
-## 9. 적용 후 점검 체크리스트
+## 9. Wiki 서버 적용
+
+Wiki 서버는 MCP 서버를 대체하는 무인증 stateless REST API입니다. 세션이 없어 연결이 끊기지 않고, `wiki_id` 경로만 바꾸면 여러 wiki(행동강령용 `jamong-harvest`, 업무별 wiki 등)를 오갈 수 있습니다. 설계 배경은 [SPEC.md](../SPEC.md) 4장 참고.
+
+### 9.1 서버 설치 (Rocky Linux / RHEL 계열)
+
+```bash
+cd /home/dev/project/Jamong-Harvest
+bash wiki/install.sh
+```
+
+`install.sh`는 venv 생성, 의존성 설치, `wiki/jamong-wiki.env` 생성, systemd unit 치환까지 자동으로 하고, root 권한이 필요한 마지막 단계만 명령으로 출력합니다 (직접 실행하지 않음).
+
+```bash
+sudo cp /tmp/jamong-wiki.service /etc/systemd/system/jamong-wiki.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now jamong-wiki
+```
+
+### 9.2 환경변수 설정 (필수)
+
+```bash
+vi /home/dev/project/Jamong-Harvest/wiki/jamong-wiki.env
+```
+
+```ini
+PORT=8001
+HOST=127.0.0.1   # 내부망 인터페이스 IP로 설정 — 0.0.0.0 절대 금지 (기동 자체를 거부함)
+```
+
+무인증 서버이므로 **절대 공인 도메인/포트포워딩으로 노출하지 않습니다.**
+
+### 9.3 Claude Code / Codex에서 사용
+
+MCP처럼 별도 서버 등록이 필요 없습니다.
+
+1. `./install.sh all`로 `wiki-client` 스킬을 설치합니다.
+2. 클라이언트 환경에 `WIKI_BASE_URL` 환경변수를 설정합니다 (예: `export WIKI_BASE_URL=http://내부IP:8001`).
+3. 프로젝트의 `CLAUDE.md`/`AGENTS.md`에 `<WIKI_ID>`를 선언해 어떤 wiki를 참조할지 명시합니다 (3장 참고).
+
+이후 사용법(엔드포인트, curl 예시, 에러 처리)은 [skills/wiki-client/SKILL.md](../skills/wiki-client/SKILL.md)를 참고하세요.
+
+### 9.4 (레거시) MCP 서버 정리
+
+`mcp/`는 트래픽이 Wiki 서버로 이전될 때까지만 유지됩니다. 이전이 끝났다면 서비스를 내리고 저장소에서 제거를 검토합니다.
+
+```bash
+sudo systemctl disable --now jamong-mcp   # 이전 완료 후, root로 직접 실행
+```
+
+---
+
+## 10. 적용 후 점검 체크리스트
 
 - [ ] `./install.sh all` 실행 후 스킬이 Claude Code / Codex 경로에 설치되었다.
 - [ ] 새 프로젝트에 `CLAUDE.md`, `AGENTS.md`가 복사되었다.
-- [ ] `<PROJECT_NAME>`, `<PROJECT_ROOT>` placeholder가 실제 값으로 교체되었다.
+- [ ] `<PROJECT_NAME>`, `<PROJECT_ROOT>`, `<WIKI_ID>` placeholder가 실제 값으로 교체되었다 (Wiki 미사용 시 `<WIKI_ID>` 줄 생략).
 - [ ] `/home/dev/.claude/CLAUDE.md`에 Jamong 글로벌 규칙이 반영되었다.
 - [ ] `/home/dev/.codex/AGENTS.md`에 Jamong 글로벌 규칙이 반영되었다.
 - [ ] Claude hook: `sudo apt update` payload가 deny 된다.
 - [ ] Claude hook: `git status` payload는 통과한다.
 - [ ] Codex hook: `sudo apt update` payload가 deny 된다.
 - [ ] 기존 OMC/OMX/RTK 설정을 덮어쓰지 않고 병합했다.
+- [ ] Wiki 서버 사용 시: `HOST`가 `0.0.0.0`이 아닌 내부망 IP로 설정되었다.
+- [ ] Wiki 서버 사용 시: `WIKI_BASE_URL` 환경변수가 클라이언트 쪽에 설정되었다.

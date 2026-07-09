@@ -8,6 +8,33 @@ All notable changes to Jamong-Harvest will be documented in this file.
 
 ---
 
+## [26.6.0] - 2026-07-09
+
+### Added
+
+- `wiki/server.py`: Wiki 서버 신규 구현 — starlette+uvicorn 기반 무인증 stateless REST API, 다중 wiki_id 네임스페이스 지원 (`GET /wikis`, `GET/POST /wikis/{wiki_id}/pages`, `GET/PUT/DELETE /wikis/{wiki_id}/pages/{slug}`, `GET /wikis/{wiki_id}/search`)
+- `wiki/storage.py`: flat markdown + frontmatter 읽기/쓰기 (stdlib만 사용, PyYAML 미사용)
+- `wiki/install.sh`, `wiki/jamong-wiki.service`, `wiki/jamong-wiki.env.example`, `wiki/requirements.txt`: systemd 배포 스캐폴딩 (`mcp/` 패턴 재사용, 별도 venv로 mcp와 공존)
+- `skills/wiki-client/SKILL.md`: Wiki 서버 curl 호출 규칙 신규 스킬 — MCP 도구 호출 대체
+- `.gitignore`: `wiki/*.env`, `wiki/data/`, `wiki/__pycache__/` 추가
+
+### Changed
+
+- `templates/CLAUDE.md`, `templates/AGENTS.md`: `<WIKI_ID>` 플레이스홀더 추가 (프로젝트별 Wiki 참조 선언, 미사용 시 생략 가능)
+- `SPEC.md`: 4장에 Wiki 서버 설계 신규 작성, MCP → Wiki 마이그레이션 배경 명시
+- `README.md`: "MCP 서버" 절을 "Wiki 서버" 절로 교체 (설치·환경변수·Claude Code/Codex 연결·사용 예시), 저장소 구조 트리·제공 스킬 표 갱신, MCP는 레거시로 축약, `WIKI_BASE_URL` 셸 프로필 영구 설정 절차 추가
+- `docs/guide.md`: "9. Wiki 서버 적용" 절 신규 추가(설치/환경변수/클라이언트 연결/레거시 MCP 정리), 구성 요소·제공 스킬·템플릿 placeholder·체크리스트에 Wiki 항목 반영, 기존 9번 체크리스트는 10번으로 이동
+- `.github/workflows/release.yml`: `install.sh`, `install.bat`을 `install.zip`과 별도로 개별 Release 에셋으로도 첨부 — `curl -LO .../releases/latest/download/install.sh`로 압축 해제 없이 단일 파일 다운로드 가능
+- `README.md`: "스킬 설치" 절에 curl 기반 다운로드 방법(zip/개별 스크립트) 안내 추가
+
+### Notes
+
+- `mcp/`는 그대로 유지 — 트래픽 이전 후 별도 커밋으로 제거 예정
+- Wiki 서버는 인증 없음, 내부망/방화벽 전용 — `HOST=0.0.0.0` 설정 시 기동 자체를 거부하도록 구현
+- commit, tag, push, release, deploy는 수행하지 않았습니다.
+
+---
+
 ## [26.5.0] - 2026-06-22
 
 ### Added
