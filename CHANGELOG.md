@@ -8,6 +8,41 @@ All notable changes to Jamong-Harvest will be documented in this file.
 
 ---
 
+## [26.7.0] - 2026-07-14
+
+### Added
+
+- `mcp/server.py`: `JamongOAuthProvider`에 OAuth 토큰 디스크 영속화(`DATA_DIR/oauth-state.json`, 원자적 쓰기) 추가 — 서버 재시작에도 클라이언트 등록 정보·토큰이 복원됨
+- `mcp/server.py`: refresh token 신규 구현 (`load_refresh_token`, `exchange_refresh_token`) — access token(1시간) 만료 시 조용히 갱신, refresh token은 만료 없이 발급되어 명시적 `/revoke` 전까지 유지
+- `mcp/server.py`: `wiki_list_wikis`, `wiki_list_pages`, `wiki_get_page`, `wiki_create_page`, `wiki_update_page`, `wiki_delete_page`, `wiki_search` MCP tool 6종 추가 — 별도 REST 서버 없이 스킬/지식 CRUD·검색을 MCP tool로 흡수
+- `mcp/storage.py`: `wiki/storage.py`를 이동 (내용 변경 없음, flat markdown + frontmatter 읽기/쓰기)
+
+### Fixed
+
+- `mcp/server.py`: `revoke_token` 시그니처를 `mcp[cli]==1.28.1` 실제 콜사이트(`revoke_token(token: AccessToken | RefreshToken)`)에 맞게 수정 — 기존 `revoke_token(token: str, ...)` 시그니처는 토큰 객체를 문자열 키로 취급해 조용히 no-op 상태였음
+- `mcp/server.py`: `AuthSettings.revocation_options=RevocationOptions(enabled=True)` 추가 — 기본값(`enabled=False`)이면 `/revoke` 라우트 자체가 등록되지 않아 명시적 인증 해제가 불가능했음 (로컬 curl 테스트로 발견: revoke 전 404 → 활성화 후 200 + 토큰 삭제 + 이후 요청 401 확인)
+
+### Removed
+
+- `wiki/` 디렉터리 전체 제거 (`server.py`, `storage.py`는 `mcp/`로 이동, 나머지 배포 스캐폴딩은 삭제) — MCP 서버로 기능 단일화
+- `skills/wiki-client/SKILL.md` 제거 — curl 사용법 대신 MCP tool docstring으로 규칙 전달
+
+### Changed
+
+- `mcp/jamong-mcp.env.example`: `DATA_DIR` 항목 추가
+- `mcp/install.sh`: `mkdir -p mcp/data` 단계 추가
+- `.gitignore`: `wiki/*.env`, `wiki/data/`, `wiki/__pycache__/` 제거, `mcp/data/`, `mcp/__pycache__/` 추가
+- `SPEC.md`: 1장 배경 설명을 "OAuth 토큰 영속화로 재인증 문제 해결 + wiki는 MCP tool로 흡수"로 교체, 4장을 "Wiki 서버 설계"에서 "MCP 서버 설계"로 재작성, 3장 트리에서 `wiki/`·`wiki-client` 제거
+- `README.md`: "Wiki 서버"/"(레거시) MCP 서버" 절을 "MCP 서버" 절 하나로 통합 (설치·`MCP_HOST` 설정·Claude Code/Codex 연결·wiki tool 사용법)
+- `docs/guide.md`: "9. Wiki 서버 적용" 절을 "9. MCP 서버 적용"으로 되돌리고 토큰 영속화 내용 반영, 체크리스트 갱신
+
+### Notes
+
+- 이번 결정으로 26.6.0의 "MCP 폐기, Wiki로 대체" 방향을 재차 뒤집었다 — 근본 원인(인메모리 토큰)을 직접 고쳐서 OAuth를 유지하는 쪽이 REST 서버를 병행 운영하는 것보다 단순하다고 판단
+- commit, tag, push, release, deploy는 수행하지 않았습니다.
+
+---
+
 ## [26.6.0] - 2026-07-09
 
 ### Added

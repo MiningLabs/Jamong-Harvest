@@ -16,16 +16,10 @@ Jamong-Harvest/
 │   ├── completion-report/
 │   ├── code-discipline/
 │   ├── versioning/
-│   ├── deploy/
-│   └── wiki-client/
-├── wiki/                   # Wiki 서버 (무인증 stateless REST, 다중 wiki_id 지원)
+│   └── deploy/
+├── mcp/                    # MCP 서버 (OAuth 토큰 영속화, 스킬 서빙 + wiki tool)
 │   ├── server.py
 │   ├── storage.py
-│   ├── requirements.txt
-│   ├── install.sh
-│   └── jamong-wiki.service
-├── mcp/                    # (레거시) MCP 서버 — Wiki 서버로 대체, 마이그레이션 후 제거 예정
-│   ├── server.py
 │   ├── requirements.txt
 │   ├── install.sh
 │   └── jamong-mcp.service
@@ -96,65 +90,97 @@ install.bat all
 | `code-discipline` | 코드 작성 전 원칙 확인 시 |
 | `versioning` | 버전 올리기, CHANGELOG 작성, tag/릴리즈 시 |
 | `deploy` | Docker 이미지 빌드·배포, digest 기반 자동 업데이트 시 |
-| `wiki-client` | Wiki 서버에서 지식을 조회·기록할 때 |
 
-## Wiki 서버
+## MCP 서버
 
-여러 머신·여러 프로젝트에서 지식(행동 강령, 업무별 데이터)을 공유하고 싶을 때, MCP 연결 대신 **무인증 stateless REST API**로 조회·기록합니다. 매 요청이 독립적이라 세션이 끊길 일이 없고, `wiki_id` 경로 세그먼트만 바꾸면 여러 wiki(예: 행동강령용 `jamong-harvest`, 업무별 wiki)를 자유롭게 오갈 수 있습니다. (MCP OAuth 세션 기반 연결이 겪던 재연결·재인증 문제를 구조적으로 없애기 위한 대체입니다 — 자세한 배경은 [SPEC.md](SPEC.md#1-목표-objective) 참고.)
+스킬을 파일로 설치하는 대신, MCP 서버에 연결해서 사용할 수 있어요. 여러 머신에서 동일한 스킬을 쓸 때 유용하고, 행동 강령·업무별 지식을 저장·검색하는 wiki tool도 함께 제공합니다. OAuth 2.0 PKCE로 인증하되 토큰을 디스크에 영속화하므로, **최초 1회만 로그인**하면 서버 재시작이나 access token 만료와 무관하게 세션이 유지됩니다(명시적으로 revoke하기 전까지).
 
 ### 서버 설치 (Rocky Linux / RHEL 계열)
 
 ```bash
 git clone https://github.com/HelloJamong/Jamong-Harvest.git /opt/jamong-harvest
 cd /opt/jamong-harvest
-bash wiki/install.sh
+bash mcp/install.sh
 
 # install.sh 안내에 따라 systemd 서비스 등록
-sudo cp /tmp/jamong-wiki.service /etc/systemd/system/jamong-wiki.service
-sudo systemctl daemon-reload
-sudo systemctl enable --now jamong-wiki
+sudo cp /tmp/jamong-mcp.service /etc/systemd/system/jamong-mcp.service
 ```
 
-### 환경변수 설정 (필수)
+### MCP_HOST 설정 (필수)
 
-`wiki/jamong-wiki.env`에서 실제 값으로 수정합니다. **인증이 없는 서버이므로 `HOST=0.0.0.0`은 절대 설정하지 마세요** — 서버가 기동 자체를 거부합니다.
+서비스 파일에 외부 도메인을 직접 지정해야 합니다. git에는 플레이스홀더(`your-domain.com`)로 커밋되어 있으므로, **서버에 복사한 뒤 반드시 실제 도메인으로 수정**하세요.
 
 ```bash
-sudo vi /opt/jamong-harvest/wiki/jamong-wiki.env
+sudo vi /etc/systemd/system/jamong-mcp.service
 ```
 
 ```ini
-PORT=8001
-HOST=127.0.0.1   # 내부망 인터페이스 IP로 변경 (0.0.0.0 금지)
+# 아래 줄을 실제 도메인으로 변경
+Environment=MCP_HOST=your-domain.com  →  Environment=MCP_HOST=mcp.example.com
 ```
-
-### Claude Code / Codex 연결
-
-MCP처럼 별도 등록 절차가 없습니다. 접속하려는 각 클라이언트 머신에서 아래 두 가지만 하면 됩니다. (서버까지의 네트워크 경로 — VPN, SSH 터널 등 — 는 환경마다 다르므로 별도로 구성되어 있다고 가정합니다. 서버는 무인증이므로 신뢰된 경로로만 접근하세요.)
-
-1. `./install.sh all`로 `wiki-client` 스킬을 설치합니다 (스킬 목록에 포함되어 자동 설치됨).
-2. `WIKI_BASE_URL`을 셸 프로필에 영구 설정합니다 (터미널을 새로 열 때마다 다시 지정하지 않도록).
 
 ```bash
-echo 'export WIKI_BASE_URL=http://내부IP:8001' >> ~/.bashrc   # zsh면 ~/.zshrc
-source ~/.bashrc
+sudo systemctl daemon-reload
+sudo systemctl enable --now jamong-mcp
 ```
 
-이후 Claude Code/Codex는 `wiki-client` 스킬의 지시에 따라 `curl`로 직접 조회·기록합니다. 사용 예시와 엔드포인트 레퍼런스는 [skills/wiki-client/SKILL.md](skills/wiki-client/SKILL.md) 참고.
+### Claude Code 연결
 
-### 지식 갱신
+CLI로 추가하거나 설정 파일에 직접 입력합니다.
 
-무상태 서버라 별도 재시작·재인증이 필요 없습니다. 페이지를 바로 `POST`/`PUT`하면 즉시 반영됩니다.
+**CLI (권장)**
 
 ```bash
-curl -s -X POST "$WIKI_BASE_URL/wikis/jamong-harvest/pages" \
-  -H 'Content-Type: application/json' \
-  -d '{"title":"제목","content":"본문","tags":["tag"],"category":"pattern"}'
+claude mcp add jamong-skills --transport http https://your-domain.com/mcp
 ```
 
-### (레거시) MCP 서버
+처음 연결 시 브라우저가 열리며 `MCP_USERNAME`/`MCP_PASSWORD`로 로그인합니다. 이후에는 재로그인 없이 세션이 유지됩니다.
 
-`mcp/`는 OAuth 2.0 기반 구서버로, 트래픽이 Wiki 서버로 이전될 때까지만 유지됩니다. 신규 사용은 권장하지 않습니다. 기존 설치 절차는 `mcp/install.sh` 및 저장소 히스토리를 참고하세요.
+**또는 `~/.claude/settings.json` 직접 수정**
+
+```json
+{
+  "mcpServers": {
+    "jamong-skills": {
+      "type": "http",
+      "url": "https://your-domain.com/mcp"
+    }
+  }
+}
+```
+
+연결 확인:
+
+```bash
+claude mcp list
+# jamong-skills: https://your-domain.com/mcp 가 표시되면 정상
+```
+
+### Codex 연결
+
+`~/.codex/config.yaml` 에 MCP 서버를 등록합니다.
+
+```yaml
+mcp_servers:
+  - name: jamong-skills
+    url: https://your-domain.com/mcp
+    transport: http
+```
+
+파일이 없으면 신규 생성합니다. Codex 재시작 후 적용됩니다.
+
+### 스킬 업데이트
+
+```bash
+cd /opt/jamong-harvest && git pull
+sudo systemctl restart jamong-mcp
+```
+
+서버 재시작에도 `DATA_DIR/oauth-state.json`에 저장된 토큰이 복원되므로 클라이언트 재인증은 필요 없습니다.
+
+### Wiki tool 사용
+
+스킬/지식 조회·기록은 `wiki_list_wikis`, `wiki_list_pages`, `wiki_get_page`, `wiki_create_page`, `wiki_update_page`, `wiki_delete_page`, `wiki_search` MCP tool로 수행합니다. 각 tool의 설명(docstring)에 카테고리 6종, wiki_id 확인 규칙, slug 불변 규칙이 담겨 있어 별도 문서 없이 tool 설명만으로 사용법을 알 수 있습니다.
 
 ## 인코딩 기준
 

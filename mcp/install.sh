@@ -11,6 +11,11 @@ echo "==> Python 패키지 설치"
 "$REPO_DIR/venv/bin/pip" install -r "$SCRIPT_DIR/requirements.txt"
 
 echo ""
+echo "==> 데이터 디렉터리 생성"
+mkdir -p "$SCRIPT_DIR/data"
+echo "  $SCRIPT_DIR/data"
+
+echo ""
 echo "==> 환경변수 파일 설정"
 ENV_FILE="$SCRIPT_DIR/jamong-mcp.env"
 if [ ! -f "$ENV_FILE" ]; then
