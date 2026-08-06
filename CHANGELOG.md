@@ -8,6 +8,19 @@ All notable changes to Jamong-Harvest will be documented in this file.
 
 ---
 
+## [26.8.0] - 2026-08-06
+
+### Added
+
+- `mcp/verify.sh`: OAuth 전체 흐름(동적 클라이언트 등록 → PKCE 로그인 → access/refresh token 발급 → refresh_token 갱신 → 서버 강제 재시작 후 재로그인 없이 유지 → `/revoke` 무효화)을 로컬에서 curl로 자동 검증하는 스크립트 추가 — 지금까지 "구현은 됐지만 실기동 검증 전"이었던 refresh token 흐름과 재시작 시 토큰 복원을 실제 mcp SDK로 9단계 전부 통과 확인
+
+### Changed
+
+- `mcp/requirements.txt`: `mcp[cli]>=1.28.0` → `mcp[cli]~=1.28.0` — 과거 `revoke_token` 시그니처 불일치 버그가 SDK 버전 문제로 재발하지 않도록 patch 버전(`1.28.x`)만 허용
+- `SPEC.md`: 4장 구현 상태를 "로컬 기동 검증 전"에서 "`mcp/verify.sh`로 로컬 검증 완료"로 갱신, 검증 명령어를 실행 가능한 스크립트 참조로 교체, 프로젝트 구조 트리에 `verify.sh` 반영, 현재 버전 갱신
+
+---
+
 ## [26.7.0] - 2026-07-14
 
 ### Added

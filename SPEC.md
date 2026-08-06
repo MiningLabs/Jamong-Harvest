@@ -15,7 +15,7 @@ Jamong의 AI 개발 환경에서 반복적으로 쓰이는 **공통 스킬, 운�
 - Jamong (저장소 소유자) — 새 프로젝트 시작 시 또는 환경 재구성 시 사용
 - AI 에이전트 (Claude Code, Codex/OMX) — 저장소 작업 시 이 파일을 운영 지침으로 참조
 
-**현재 버전**: `26.7.0`
+**현재 버전**: `26.8.0`
 **버전 형식**: `YY.메이저.마이너`
 
 **설계 변경 배경**: 기존 `mcp/server.py`(FastMCP + OAuth 2.0 PKCE)는 토큰을 인메모리 dict에만 저장해서 서버 재시작·access token 만료(24시간)마다 Claude Code/Codex 양쪽에서 재로그인이 필요했다. 이 문제로 한때 무인증 stateless REST API(Wiki 서버)로 갈아탄 적이 있으나, OAuth 인증 자체는 유지하되 **토큰을 디스크에 영속화하고 refresh token을 지원**하는 방향으로 되돌렸다 — 최초 1회만 로그인하면 명시적으로 `/revoke`하기 전까지 세션이 유지된다. Wiki 서버가 제공하던 기능(페이지 CRUD/검색)은 별도 서버 없이 MCP tool로 흡수했으므로 `wiki/`는 제거했다.
@@ -58,13 +58,10 @@ printf '%s\n' '{"tool_name":"Bash","tool_input":{"command":"git status"}}' \
 # MCP 서버 구문 검사
 python3 -m py_compile mcp/server.py mcp/storage.py
 
-# MCP 서버 기동 확인 (로컬, PORT=8000) — mcp[cli] 설치된 venv 필요
-DATA_DIR=/tmp/mcp-verify PORT=8000 MCP_USERNAME=admin MCP_PASSWORD=test python3 mcp/server.py &
-sleep 1
-# OAuth 로그인 플로우(/authorize → /login → /login/callback → /token)를 거쳐
-# access_token + refresh_token 발급 확인, 프로세스 재기동 후 DATA_DIR/oauth-state.json에서
-# 토큰이 복원되는지 확인
-kill %1
+# MCP 서버 OAuth 전체 흐름 검증 (등록 → PKCE 로그인 → refresh → 재시작 후 유지 → revoke)
+# mcp[cli] 설치된 venv 필요 (./mcp/install.sh 로 생성되는 venv를 자동으로 사용, 없으면 PYTHON=/path/to/python 지정)
+./mcp/verify.sh
+# 예상: 9단계 전부 PASS, 마지막에 "모든 검증 통과" 출력
 ```
 
 ---
@@ -86,9 +83,10 @@ Jamong-Harvest/
 │   ├── server.py               # FastMCP, OAuth 2.0 PKCE + refresh token, wiki tool 6종
 │   ├── storage.py              # flat markdown + frontmatter 읽기/쓰기 (wiki tool 백엔드)
 │   ├── install.sh              # systemd 서비스 설치 스크립트
+│   ├── verify.sh                # OAuth 전체 흐름(등록·PKCE·refresh·재시작·revoke) 로컬 검증 스크립트
 │   ├── jamong-mcp.service      # systemd unit 템플릿
 │   ├── jamong-mcp.env.example  # 환경변수 템플릿 (PORT, MCP_HOST, DATA_DIR 등)
-│   └── requirements.txt        # mcp[cli]
+│   └── requirements.txt        # mcp[cli] (compatible release로 고정)
 ├── templates/
 │   ├── CLAUDE.md           # Claude Code 프로젝트 운영 템플릿
 │   └── AGENTS.md           # Codex/OMX 및 범용 에이전트 운영 템플릿
@@ -115,7 +113,7 @@ Jamong-Harvest/
 
 ---
 
-## 4. MCP 서버 설계 (구현 상태: 구현 완료 / 로컬 기동 검증·운영 배포 전)
+## 4. MCP 서버 설계 (구현 상태: 구현 완료, `mcp/verify.sh`로 로컬 OAuth 전체 흐름 검증 완료 / 운영 배포 전)
 
 ### 4.1 OAuth 토큰 영속화
 
@@ -263,4 +261,4 @@ run_as: inline
 
 ---
 
-*최종 갱신: 2026-07-14 (v26.7.0 기준, MCP OAuth 토큰 영속화 + wiki tool 흡수, wiki/ 제거)*
+*최종 갱신: 2026-08-06 (v26.8.0 기준, `mcp/verify.sh`로 OAuth 전체 흐름 로컬 검증 완료)*
