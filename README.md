@@ -98,8 +98,15 @@ install.bat all
 ### 서버 설치 (Rocky Linux / RHEL 계열)
 
 ```bash
+# 1) git clone
 git clone https://github.com/HelloJamong/Jamong-Harvest.git /opt/jamong-harvest
-cd /opt/jamong-harvest
+
+# 2) 또는 curl로 install.zip 받기 (git 없이, skills/ + mcp/ 포함)
+mkdir -p /opt/jamong-harvest && cd /opt/jamong-harvest
+curl -fsSLO https://github.com/HelloJamong/Jamong-Harvest/releases/latest/download/install.zip
+unzip install.zip
+cd jamong-harvest-*/
+
 bash mcp/install.sh
 
 # install.sh 안내에 따라 systemd 서비스 등록

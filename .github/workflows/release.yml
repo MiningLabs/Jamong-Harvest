@@ -48,8 +48,10 @@ jobs:
 
           cp install.sh install.bat "$STAGING/"
           cp -r skills "$STAGING/"
+          cp -r mcp "$STAGING/"
+          rm -rf "$STAGING/mcp/__pycache__"
 
-          chmod +x "$STAGING/install.sh"
+          chmod +x "$STAGING/install.sh" "$STAGING/mcp/install.sh" "$STAGING/mcp/verify.sh"
 
           cd staging
           zip -r "../install.zip" "jamong-harvest-${TAG}/"

@@ -15,7 +15,7 @@ Jamong의 AI 개발 환경에서 반복적으로 쓰이는 **공통 스킬, 운�
 - Jamong (저장소 소유자) — 새 프로젝트 시작 시 또는 환경 재구성 시 사용
 - AI 에이전트 (Claude Code, Codex/OMX) — 저장소 작업 시 이 파일을 운영 지침으로 참조
 
-**현재 버전**: `26.8.0`
+**현재 버전**: `26.9.0`
 **버전 형식**: `YY.메이저.마이너`
 
 **설계 변경 배경**: 기존 `mcp/server.py`(FastMCP + OAuth 2.0 PKCE)는 토큰을 인메모리 dict에만 저장해서 서버 재시작·access token 만료(24시간)마다 Claude Code/Codex 양쪽에서 재로그인이 필요했다. 이 문제로 한때 무인증 stateless REST API(Wiki 서버)로 갈아탄 적이 있으나, OAuth 인증 자체는 유지하되 **토큰을 디스크에 영속화하고 refresh token을 지원**하는 방향으로 되돌렸다 — 최초 1회만 로그인하면 명시적으로 `/revoke`하기 전까지 세션이 유지된다. Wiki 서버가 제공하던 기능(페이지 CRUD/검색)은 별도 서버 없이 MCP tool로 흡수했으므로 `wiki/`는 제거했다.
@@ -261,4 +261,4 @@ run_as: inline
 
 ---
 
-*최종 갱신: 2026-08-06 (v26.8.0 기준, `mcp/verify.sh`로 OAuth 전체 흐름 로컬 검증 완료)*
+*최종 갱신: 2026-08-06 (v26.9.0 기준, `install.zip`에 `mcp/` 포함 — MCP 서버 curl 설치 지원)*

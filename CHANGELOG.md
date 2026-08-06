@@ -8,6 +8,18 @@ All notable changes to Jamong-Harvest will be documented in this file.
 
 ---
 
+## [26.9.0] - 2026-08-06
+
+### Added
+
+- `.github/workflows/release.yml`: `install.zip`에 `mcp/` 디렉터리 포함 — MCP 서버를 설치할 대상 서버에서 git 없이 curl만으로 `mcp/install.sh`·`mcp/verify.sh`까지 받을 수 있음 (`mcp/__pycache__` 제외, `install.sh`/`verify.sh` 실행 권한 부여)
+
+### Changed
+
+- `README.md`: MCP 서버 설치 섹션에 curl로 `install.zip` 받는 방법 추가 (기존 git clone 방식과 병행)
+
+---
+
 ## [26.8.0] - 2026-08-06
 
 ### Added
