@@ -8,6 +8,14 @@ All notable changes to Jamong-Harvest will be documented in this file.
 
 ---
 
+## [26.9.1] - 2026-09-09
+
+### Changed
+
+- 완료 보고 형식에서 `사용량` 블록 제거 — 이 환경에서 Claude Code/Codex·OMX 사용량을 조회할 수 없어 항상 `확인불가`로만 출력되던 항목. `skills/completion-report/SKILL.md`, `AGENTS.md`, `templates/AGENTS.md`, `templates/CLAUDE.md`에서 사용량 보고 지시·`확인불가` 표기 규칙 삭제 (사용량 기반 툴 라우팅 규칙은 유지)
+
+---
+
 ## [26.9.0] - 2026-08-06
 
 ### Added

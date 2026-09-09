@@ -86,7 +86,6 @@ Rules for Codex/OMX or other autonomous agents:
 - Prefer small, surgical changes.
 - Use tracked/background sessions for long-running work.
 - Do not use high-risk full-auto/yolo behavior unless explicitly approved.
-- If usage cannot be checked reliably, report `확인불가` rather than guessing.
 
 ## 7. Development Discipline
 
@@ -130,10 +129,6 @@ Use this shape:
 
 주의/다음 단계
 - <optional>
-
-사용량
-- Claude Code: <value or 확인불가>
-- Codex/OMX: <value or 확인불가>
 ```
 
 ## 10. Project-Specific Commands
