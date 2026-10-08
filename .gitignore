@@ -11,11 +11,3 @@ CLAUDE.md
 # 작업 임시 파일
 tasks/
 
-# MCP 환경변수 (실제 값 포함, 커밋하지 않음)
-mcp/*.env
-
-# MCP 서버 데이터 (OAuth 토큰, wiki 페이지 콘텐츠 — 커밋하지 않음)
-mcp/data/
-
-# Python 빌드 산출물
-mcp/__pycache__/

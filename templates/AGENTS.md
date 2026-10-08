@@ -1,12 +1,11 @@
 # <PROJECT_NAME> Agent Operating Guide
 
-> Jamong 전용 Codex/OMX 및 범용 코딩 에이전트 운영 템플릿입니다. 이 파일을 대상 프로젝트 루트의 `AGENTS.md`로 복사한 뒤 `<PROJECT_NAME>`, `<PROJECT_ROOT>`, `<WIKI_ID>`를 실제 값으로 바꿔 사용합니다.
+> Jamong 전용 Codex/OMX 및 범용 코딩 에이전트 운영 템플릿입니다. 이 파일을 대상 프로젝트 루트의 `AGENTS.md`로 복사한 뒤 `<PROJECT_NAME>`, `<PROJECT_ROOT>`를 실제 값으로 바꿔 사용합니다.
 
 ## 0. Scope
 
 - Project: `<PROJECT_NAME>`
 - Root: `<PROJECT_ROOT>`
-- Wiki: `<WIKI_ID>` (optional, omit if unused)
 - Default language: Korean
 - Primary goal: small, safe, verified development changes
 

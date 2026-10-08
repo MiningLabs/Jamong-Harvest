@@ -1,16 +1,3 @@
----
-name: versioning
-description: >
-  버전 관리 및 릴리즈 규칙.
-  다음 상황에서 반드시 이 스킬을 먼저 확인한다:
-  (1) 버전을 올리거나 릴리즈를 준비할 때
-  (2) CHANGELOG.md를 작성하거나 수정할 때
-  (3) git tag를 생성하거나 push할 때
-  (4) GitHub Release를 생성할 때
-allowed_tools: []
-run_as: inline
----
-
 # Versioning Rules
 
 ## 버전 형식
@@ -80,7 +67,7 @@ YY.메이저.마이너
 4. 태그 push: `git push origin 25.1.0`
 5. GitHub Release 생성 — 본문: 해당 버전 CHANGELOG.md 내용
 
-## 관련 스킬
+## 관련 규칙
 
-- **git-workflow**: CHANGELOG 커밋 및 태그 push 시 커밋·푸시 규칙을 함께 확인한다.
-- **completion-report**: 릴리즈 완료 후 보고 형식을 작성할 때 함께 확인한다.
+- **[git-workflow.md](git-workflow.md)**: CHANGELOG 커밋 및 태그 push 시 커밋·푸시 규칙을 함께 확인한다.
+- **완료 보고 (SKILL.md)**: 릴리즈 완료 후 보고 형식을 작성할 때 함께 확인한다.

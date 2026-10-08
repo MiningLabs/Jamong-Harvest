@@ -1,17 +1,8 @@
----
-name: deploy
-description: >
-  배포 규칙. Docker 이미지 빌드 및 DockerHub 배포 시 반드시 이 규칙을 따른다.
-  명시 요청 없이 배포하지 않는다.
-allowed_tools: []
-run_as: inline
----
-
 # Deploy Rules
 
 ## 기본 규칙
 
-- **명시 요청 없이 배포 절대 금지** — git-workflow의 deploy 규칙과 동일하게 적용한다.
+- **명시 요청 없이 배포 절대 금지** — [git-workflow.md](git-workflow.md)의 deploy 규칙과 동일하게 적용한다.
 
 ## Docker 이미지 배포
 
@@ -58,7 +49,7 @@ docker push <image>:latest
 docker push <image>:26.1.0
 ```
 
-## 관련 스킬
+## 관련 규칙
 
-- **git-workflow**: 배포 전 커밋·태그 규칙을 함께 확인한다.
-- **versioning**: DockerHub push 전 버전 태그 확정을 확인한다.
+- **[git-workflow.md](git-workflow.md)**: 배포 전 커밋·태그 규칙을 함께 확인한다.
+- **[versioning.md](versioning.md)**: DockerHub push 전 버전 태그 확정을 확인한다.

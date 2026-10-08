@@ -8,6 +8,30 @@ All notable changes to Jamong-Harvest will be documented in this file.
 
 ---
 
+## [26.10.0] - 2026-10-08
+
+### Changed
+
+- 스킬 구조를 단일 스킬 `skills/jamong/`으로 통합 (`skill_for_vmfort`와 동일 구조)
+  - `SKILL.md`: 항상 적용되는 공통 규칙 — 관리자 권한 금지(구 `admin-safety`), 코딩 규율(구 `code-discipline`), 완료 보고(구 `completion-report`), 상황별 참고 파일 표
+  - `references/git-workflow.md`, `references/versioning.md`, `references/deploy.md`: 상황별 규칙 (구 동명 스킬 본문, frontmatter 제거·상호 참조 경로 갱신)
+- 설치 방식을 curl + tar로 변경 — GitHub Release의 `jamong.tar.gz`를 스킬 경로에 바로 풀어 설치 (재설치 시 `jamong/` 폴더를 지운 뒤 설치)
+- `.github/workflows/release.yml`: 릴리스 자산을 `install.zip`/`install.sh`/`install.bat` 대신 `jamong.tar.gz` 하나로 변경
+- `README.md`, `docs/guide.md`, `SPEC.md`: 단일 스킬 구조·curl 설치·이전 스킬 정리 방법으로 갱신, 저장소 URL을 `MiningLabs/Jamong-Harvest`로 변경
+
+### Removed
+
+- MCP 서버(`mcp/` 전체: `server.py`, `storage.py`, `install.sh`, `verify.sh`, systemd unit, env 예시, `requirements.txt`)와 관련 문서·`.gitignore` 항목
+- `install.sh`, `install.bat`
+- 개별 스킬 6종 디렉터리 (`admin-safety`, `code-discipline`, `completion-report`, `git-workflow`, `versioning`, `deploy`)
+- `templates/CLAUDE.md`, `templates/AGENTS.md`, `docs/guide.md`의 `<WIKI_ID>` placeholder
+
+### Fixed
+
+- `.github/workflows/release.yml`: GitHub Release 본문 참조를 `steps.changelog.notes` → `steps.changelog.outputs.notes`로 수정 — step output 경로가 잘못되어 릴리스 본문에 CHANGELOG 내용이 들어가지 않던 문제
+
+---
+
 ## [26.9.1] - 2026-09-09
 
 ### Changed
