@@ -8,6 +8,16 @@ All notable changes to Jamong-Harvest will be documented in this file.
 
 ---
 
+## [26.10.1] - 2026-10-08
+
+### Changed
+
+- `docs/guide.md` 5장: Codex `~/.codex/AGENTS.md`에 Jamong 규칙을 반영하는 절차를 구체화 — 백업, `<!-- User customizations -->` 마커 아래 Claude Jamong 섹션 복사 명령, OMX 자율 실행 지침보다 git·관리자 권한 경계가 우선함을 명시하는 `Codex / Agent Usage` 절, diff 기반 검증, `omx setup` 재실행 시 재적용 주의
+- `docs/guide.md` 4장: Claude `CLAUDE.md` Jamong 섹션 설명을 실제 구성(5개 절)으로 갱신하고 이전 사용량 경고 항목 제거, 전역 지침(항상 로드)과 스킬(모델 판단 시 로드)의 역할 구분 추가
+- `README.md`: 규칙 적용 방식(전역 지침·스킬·hook 계층과 로드 시점), 릴리스 흐름, 최신 릴리스·CHANGELOG 링크 추가, 저장소 구조에 `.github/`·`AGENTS.md`·`SPEC.md`·`CHANGELOG.md` 반영, Codex MCP 해제 안내를 실제 설정 파일(`~/.codex/config.toml`) 기준으로 수정
+
+---
+
 ## [26.10.0] - 2026-10-08
 
 ### Changed

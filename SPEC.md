@@ -13,7 +13,7 @@ Jamong의 AI 개발 환경에서 반복적으로 쓰이는 **공통 스킬, 운�
 - Jamong (저장소 소유자) — 새 프로젝트 시작 시 또는 환경 재구성 시 사용
 - AI 에이전트 (Claude Code, Codex/OMX) — 저장소 작업 시 이 파일을 운영 지침으로 참조
 
-**현재 버전**: `26.10.0`
+**현재 버전**: `26.10.1`
 **버전 형식**: `YY.메이저.마이너`
 
 **설계 변경 배경**: 26.10.0에서 6개 개별 스킬과 MCP 서버(OAuth + wiki tool)를 정리하고 단일 스킬 `jamong`으로 통합했다. `skill_for_vmfort`와 같은 구조(단일 스킬 + references)이며, 스킬은 GitHub Release의 `jamong.tar.gz`를 curl로 받아 바로 설치한다.

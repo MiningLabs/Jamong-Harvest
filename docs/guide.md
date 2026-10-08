@@ -74,16 +74,19 @@ Claude Code 글로벌 설정 파일:
 
 1. 기존 파일을 먼저 백업합니다.
 2. OMC 같은 도구가 관리하는 블록이 있다면 내부를 수정하지 않습니다.
-3. Jamong 전용 규칙은 관리 블록 바깥에 별도 섹션으로 추가합니다.
+3. Jamong 전용 규칙은 관리 블록 바깥(`<!-- User customizations -->` 아래)에 `# Jamong Global Project Working Guidelines` 섹션으로 추가합니다.
 
-포함할 핵심 규칙:
+섹션 구성:
 
-- 한국어 기본 응답
-- 프로젝트 루트는 `/home/dev/project/<project>`
-- `sudo`/관리자 명령 직접 실행 금지
-- 명시 요청 없는 commit/tag/push/deploy/restart 금지
-- 변경 후 diff/test/lint/security 검증
-- Claude Code 사용량 70% 근처 경고, 90% 이상이면 Codex/OMX 고려
+| 절 | 핵심 규칙 |
+|----|-----------|
+| Language and Communication | 한국어 기본 응답, 근거 있는 간결한 보고, 모호하면 질문 |
+| Project Location and Git Boundaries | 프로젝트 루트 `/home/dev/project/<project>`, 명시 요청 없는 commit/tag/push/release/deploy 금지, 변경 후 diff·검증 보고 |
+| Administrator Privilege Boundary | `sudo`/관리자 명령 직접 실행 금지, 정해진 중지 문구 + 실행할 명령 안내 |
+| Karpathy-Style Coding Discipline | Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution |
+| Claude Code / Agent Usage | Claude Code 우선 사용, 사용량 한도 근처면 Codex로 전환, compact는 요청 시에만 |
+
+이 섹션은 세션마다 항상 로드됩니다. `jamong` 스킬은 모델이 필요하다고 판단할 때만 로드되므로, 항상 지켜야 하는 핵심 규칙은 여기에 두고 세부 규칙(커밋 메시지 형식, 버전·CHANGELOG, 배포)은 스킬에 둡니다.
 
 ---
 
@@ -95,10 +98,53 @@ Codex/OMX 글로벌 지침 파일:
 /home/dev/.codex/AGENTS.md
 ```
 
-적용 원칙은 Claude와 동일합니다.
+Codex는 `~/.codex/AGENTS.md`를 세션마다 항상 로드합니다. 이 파일에 Jamong 규칙이 없으면 Codex에서는 sudo 차단 hook을 제외한 모든 규칙이 `jamong` 스킬 로드 여부에 의존하게 되므로, 4장의 Jamong 섹션을 그대로 옮겨 둡니다.
 
-- 기존 OMX/도구 생성 블록을 보존합니다.
-- Jamong 전용 운영 규칙을 별도 섹션으로 추가합니다.
+### 5.1 적용 절차
+
+1. 기존 파일을 백업합니다.
+
+   ```bash
+   cp ~/.codex/AGENTS.md ~/.codex/AGENTS.md.bak
+   ```
+
+2. 파일 끝(OMX 생성 내용 뒤)에 `<!-- User customizations -->` 마커와 함께 4장의 Jamong 섹션을 붙입니다. OMX 블록(`<!-- OMX:...:START/END -->`) 내부는 수정하지 않습니다.
+
+   ```bash
+   {
+     printf '\n<!-- User customizations -->\n---\n\n'
+     awk '/^# Jamong Global/{f=1} /^## Claude Code \/ Agent Usage/{f=0} f' ~/.claude/CLAUDE.md
+   } >> ~/.codex/AGENTS.md
+   ```
+
+3. 마지막에 Codex 전용 절을 추가합니다. OMX 지침에는 "되돌릴 수 있는 작업은 사람에게 미루지 말고 직접 실행"하라는 내용이 있으므로, Jamong 경계 규칙이 우선한다는 점을 명시합니다.
+
+   ```markdown
+   ## Codex / Agent Usage
+   - Jamong uses Codex/OMX when Claude Code is unavailable or near its usage limit; follow the same rules as in Claude Code.
+   - The Git boundary and Administrator Privilege Boundary above take precedence over OMX guidance to execute reversible actions autonomously: commit, tag, push, release, deploy, service restart, and administrator commands always require Jamong's explicit request.
+   - Detailed rules (commit message format, versioning/CHANGELOG, deploy) live in the `jamong` skill (`~/.codex/skills/jamong/`); load it for those tasks.
+   ```
+
+### 5.2 검증
+
+```bash
+# 추가만 되고 기존 OMX 내용은 그대로인지 확인 (출력이 모두 '>' 줄이어야 함)
+diff ~/.codex/AGENTS.md.bak ~/.codex/AGENTS.md
+
+# Jamong 본문이 Claude 쪽과 동일한지 확인 (출력 없음이면 동일)
+ext(){ awk -v stop="$2" '/^# Jamong Global/{f=1} $0==stop{f=0} f' "$1"; }
+diff <(ext ~/.claude/CLAUDE.md '## Claude Code / Agent Usage') <(ext ~/.codex/AGENTS.md '## Codex / Agent Usage')
+
+# 마커 중복 여부 (1이어야 함)
+grep -c 'User customizations' ~/.codex/AGENTS.md
+```
+
+### 5.3 주의사항
+
+- `~/.codex/AGENTS.md`는 `omx setup`이 생성한 파일(`<!-- omx:generated:agents-md -->`)입니다. `omx setup`을 다시 실행하면 파일이 재생성되어 Jamong 섹션이 사라질 수 있으니, 실행 후 5.2로 확인하고 없으면 5.1을 다시 적용합니다.
+- Jamong 규칙을 수정할 때는 `~/.claude/CLAUDE.md`와 `~/.codex/AGENTS.md`를 함께 수정합니다.
+- 적용 후 Codex를 재시작해야 반영됩니다.
 
 ---
 
@@ -236,7 +282,7 @@ printf '%s\n' '{"tool_name":"Bash","tool_input":{"command":"sudo apt update"}}' 
 - [ ] 새 프로젝트에 `CLAUDE.md`, `AGENTS.md`가 복사되었다.
 - [ ] `<PROJECT_NAME>`, `<PROJECT_ROOT>` placeholder가 실제 값으로 교체되었다.
 - [ ] `/home/dev/.claude/CLAUDE.md`에 Jamong 글로벌 규칙이 반영되었다.
-- [ ] `/home/dev/.codex/AGENTS.md`에 Jamong 글로벌 규칙이 반영되었다.
+- [ ] `/home/dev/.codex/AGENTS.md`에 Jamong 글로벌 규칙과 `Codex / Agent Usage` 절이 반영되었다 (5.2 검증 통과).
 - [ ] Claude hook: `sudo apt update` payload가 deny 된다.
 - [ ] Claude hook: `git status` payload는 통과한다.
 - [ ] Codex hook: `sudo apt update` payload가 deny 된다.
